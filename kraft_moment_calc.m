@@ -1,17 +1,38 @@
-% Kod för beräkning av NB som används senare
+% Initialize global variables
 
-Nf = 1;
-Nb = 2;
-mg = 140*9.81;
-Fl =0.5*0.3*0.5*1.21*27.7778.^2;
+global Nf Nb c A v p a1 a2 g m L R df db h h1 b1 dh rd rb bb bd D d a gamma Fl rh
+
+Nf = 0;
+Nb = 0;
+c = 0.3;
+A = 0.45;
+v = 120/3.6;
+p = 1.2;
+a1 = 4;
+a2 = -10;
+g = 9.81;
+m = 120;
+L = 1.1;
+R = 14;
 df = 0.8;
 db = 0.3;
-h1 = 0.2;
 h = 0.44;
+h1 = 0.2;
+b1 = 0.16;
+dh = 0.33;
+rd = 0.11;
+rb = 0.09;
+bb = 0.28;
+bd = 0.0;
+D = 0.028;
+d = 0.6*D;
+a = 0;
+gamma = 0.25;
+Fl = (1/2)*p*c.*A*v.^2;
+rh = 0.5*dh;
 
-
-Nf = (mg.*db - Fl.*(h1+h))./(df+db);
-Nb = mg - Nf;
+Nf = (m*g.*db - Fl.*(h1+h))./(df+db);
+Nb = m*g - Nf;
 
 %%
 % Case 1 xz-plane
@@ -25,30 +46,32 @@ Moment1xz = -R1z.*b1 - R2z.*(L-b1) - (Nb.*L)./2 == 0;
 
 sol1xz = solve([kraft1xz, Moment1xz], [R1z, R2z]);
 
-vpa(sol1xz.R1z)
-vpa(sol1xz.R2z)
+disp("Case 1 xz-plane:")
+disp("R1z: " + string(vpa(sol1xz.R1z)))
+disp("R2z: " + string(vpa(sol1xz.R2z)))
+
 
 %%
 % Case 1 xy-plane
-syms R1y R2y
+syms R1 Fk
 
-Fd = 70;
-Fk = 105;
+Fl;
 
-kraft1xy = Fd - R1y -R2y + Fk == 0;
-Moment1xy = R1y*b1 - 0.5*Fk*L + R2y*(L-b1) - 0.5*Fd*L == 0;
+ekv1 = -2*R1 + Fl +Fk == 0;
+ekv2 = R1*b1 - Fk*(L/2) + R1*(L-b1) - (Fl/2)*L == 0;
 
-sol1xy = solve([kraft1xy, Moment1xy], [R1y, R2y]);
+sol1xy = solve([kraft1xy, Moment1xy], [R1, Fk]);
 
-vpa(sol1xy.R1y)
-vpa(sol1xy.R2y)
+disp("Case 1 xy-plane:")
+disp("R1y: " + string(vpa(sol1xy.R1)))
+disp("R2y: " + string(vpa(sol1xy.Fk)))
 
 
 %%
 % Case 1 yz-plane
 syms R1y R2y
 
-Fd = 70;
+Fd = Fl;
 Fk = 105;
 rd = 0.11;
 rh = 0.5*0.33;
@@ -58,56 +81,40 @@ Moment1yz = -Fd*rh - Fk*rd == 0;
 
 sol1yz = solve([kraft1yz, Moment1yz], [R1y, R2y]);
 
-vpa(sol1yz.R1y)
-vpa(sol1yz.R2y)
+disp("Case 1 yz-plane:")
+disp("R1y: " + string(vpa(sol1yz.R1y)))
+disp("R2y: " + string(vpa(sol1yz.R2y)))
+
 
 %%
 % Case 2 xz-plane
 syms R1z R2z
-
-b1 = 0.16;
-L = 1.1;
 
 kraft2xz = R1z + R2z + Nb == 0;
 Moment2xz = -(R1z*b1 + R2z*(L-b1) + 0.5*Nb*L);
 
 sol2xz = solve([kraft2xz, Moment2xz], [R1z, R2z]);
 
-vpa(sol2xz.R1z)
-vpa(sol2xz.R2z)
+disp("Case 2 xz-plane:")
+disp("R1z: " + string(vpa(sol1xz.R1z)))
+disp("R2z: " + string(vpa(sol1xz.R2z)))
 
 %%
-% Case 2 xy-plane
-syms R1y R2y
+% Case 2 xy-plane (inte rätt)
+syms R1y Fk
 
-m = 140;
-Fd = 630;
-Fk = 945;
-a = 4.5;
-Fa =m*a;
-b1 = 0.16;
-L = 1.1;
+kraft2xy = Fl - 2*R1y + Fk == -m*a1;
+Moment2xy = R1y*b1 - 0.5*Fk*L + R1y*(L-b1) - 0.5*Fl*L == 0;
 
-kraft2xy = Fd - R1y - R2y + Fk == -Fa;
-Moment2xy = R1y*b1 - 0.5*Fk*L + R2y*(L-b1) - 0.5*Fd*L == 0;
-
-sol2xy = solve([kraft2xy, Moment2xy], [R1y, R2y]);
+sol2xy = solve([kraft2xy, Moment2xy], [R1y, Fk]);
 
 vpa(sol2xy.R1y)
-vpa(sol2xy.R2y)
+vpa(sol2xy.Fk)
 
 
 %%
 % Case 2 yz-plane
 syms R1y R2y
-
-Fd = 70;
-Fk = 105;
-rd = 0.11;
-rh = 0.5*0.33;
-Fa =m*a;
-m = 140;
-a = 4.5;
 
 kraft2yz = R1y + R2y - Fd + Fk == Fa;
 Moment2yz = -Fd*rh - Fk*rd == 0;
@@ -118,21 +125,22 @@ vpa(sol2yz.R1y)
 vpa(sol2yz.R2y)
 
 %%
-% Case 3 xy-plane
+% Case 3 xz-plane
 syms R1z R2z
 
-m = 140;
+m = 120;
 Fd = 630;
 Fk = 945;
 a = 4.5;
 Fa =m*a;
 b1 = 0.16;
 L = 1.1;
+Fb = 0;
 
-kraft2xy = Nb + R1z + R2z + sqrt(2)*Fb == 0;
-Moment2xy = R1y*-b1 + Fb*(-(L/2)-bb) + fb == 0;
+kraft3xy = Nb + R1z + R2z + sqrt(2)*Fb == 0;
+Moment3xy = R1z*b1 + (Fb/(sqrt(2)))*((L/2)-bb) + (Fb/(sqrt(2)))*((L/2)+bb) + R2z*(L-b1) + (Nb/2)*L== 0;
 
-sol2xy = solve([kraft2xy, Moment2xy], [R1y, R2y]);
+sol3xy = solve([kraft3xy, Moment3xy], [R1z, R2z]);
 
-vpa(sol2xy.R1y)
-vpa(sol2xy.R2y)
+vpa(sol3xy.R1z)
+vpa(sol3xy.R2z)
